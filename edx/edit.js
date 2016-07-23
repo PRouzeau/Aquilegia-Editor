@@ -57,13 +57,12 @@ $(document).ready(function(){
 });
 
 function insFile(file) {
-	document.myform.filename.value =file;
+	document.myform.flname.value =file;
 	$('#btnload').click();
 }
 
 function forceSave() {
 	document.myform.forcesave.value = "force save";
-	//alert ("submit "+document.myform.submit.value+ "forcesave "+document.myform.forcesave.value);
 	$("#svp").click(); // document.myform.submit();  do not define submit value
 }
 

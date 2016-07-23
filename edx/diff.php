@@ -20,7 +20,7 @@ function getOneDiff ($pfile, $pos) {
 	$hdiff=[]; $opc=[]; $oph=[]; $i=0; $res =[];
 	$pgfile = $fldir."/".$pfile.".txt";
 	$prev = file_get_contents($pgfile);
-	$filediff = $fldir."/".$pfile.".dif";
+	$filediff = "hist/".$pfile.".dif";
 	$fp = fopen($filediff, "r");
 	while (($buffer = fgets($fp)) !== false) {
 		$hdiff [$i] =$buffer;

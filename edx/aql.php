@@ -5,7 +5,7 @@ error_reporting(E_ALL);
 
 $fldir = "../h";
 $filex = 'hlp';
-$pagefile= $fldir."/hlp.txt";
+$pagefile= "";
 
 function normPage ($hpage) {
 	return strtolower(preg_replace ('/[\t ]/',"_",trim($hpage)));

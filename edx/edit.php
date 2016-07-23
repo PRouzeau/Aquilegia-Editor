@@ -17,11 +17,15 @@
 </head>
 <body>
 <?php
+define('CR', "\r");        
+define('LF', "\n");      
+define('CRLF', "\r\n");
 $text="";
 $pfile="";
 $sha1=""; 
 $shapage="";
 $warn="";
+$textd="";
 $demo = false;
 $demotxt = "";
 $warnedit = "
@@ -37,18 +41,18 @@ $warnedit = "
 include 'aql.php'; 
 include 'finediff.php';
 
-if (isset($_SERVER['REMOTE_USER'])) /*defined in .htaccess rewrite engine*/
-	$auth = $_SERVER['REMOTE_USER'];
-else
-	$auth="";
+if (isset($_SERVER['PHP_AUTH_USER']))  // not valid for all php installations
+		$author = $_SERVER['PHP_AUTH_USER'];
+	else // use what is defined in .htaccess
+		$author = (isset($_SERVER['REMOTE_USER'])?$_SERVER['REMOTE_USER']:"unknown");
 
-if (isset($_POST['filename'])) {
-	$pfile = normPage($_POST['filename']);
+if (isset($_POST['flname'])) {
+	$pfile = normPage($_POST['flname']);
 	$lng = strlen($pfile); 
 	if ($lng>4 && substr ($pfile,$lng-4)==".txt")
 		$pfile = substr ($pfile,$lng-4);
 	$pagefile = $fldir."/".$pfile.".txt";
-	$pgbak = $fldir."/".$pfile.".bak";
+	$pgbak = "hist/".$pfile.".bak";
 	if (isset($_POST['submit']) && $_POST['submit']=="Load")
 		if (file_exists ($pagefile)) {
 			$text = file_get_contents($pagefile);
@@ -56,17 +60,20 @@ if (isset($_POST['filename'])) {
 			if (sha1_file($pagefile)!=@sha1_file($pgbak)) { // check if file modified/bak file (external mod)
 				$oldtext = @file_get_contents($pgbak);
 				$oldtext = ($oldtext ? $oldtext : ""); //blank if file not accessible
-				storeDiff($text, $oldtext, $pagefile);
+				storeDiff($text, $oldtext, $pfile);
 				copy ($pagefile, $pgbak);
 			}
 		}	
 		else
 			$text = "File ".$pagefile." not found"; // not the best idea 
+		$textd= str_replace("&", "&amp;", $text);	
 }
 
 // check if form has been submitted
-if (isset($_POST['texta']) && isset($_POST['submit']) && $_POST['submit']=="Save page") { // save the text contents
-	$text = preg_replace("/(?<=[^\r]|^)\n/", "\n", $_POST['texta']);
+if ($pfile && isset($_POST['texta']) && isset($_POST['submit']) && $_POST['submit']=="Save page") { // save the text contents
+	$text = str_replace(CRLF, LF,$_POST['texta']);
+    $text = str_replace(CR, LF, $text);
+	$textd= str_replace("&", "&amp;", $text); //escape '&' to avoid Textarea crush html entities->will return naked '&' 
 	if (trim($text)!= "") {
 		$oldtext = @file_get_contents($pagefile);
 		$oldtext = ($oldtext ? $oldtext : ""); //blank if file not accessible
@@ -76,10 +83,9 @@ if (isset($_POST['texta']) && isset($_POST['submit']) && $_POST['submit']=="Save
 			if ($shapage==$shaold || (isset($_POST['forcesave']) && $_POST['forcesave']=="force save"))  { 
 				$sha1 = sha1($text); // the file is saved, so this is a new $sha1
 				if (!$demo) {
-					storeDiff ($text, $oldtext, $pagefile);
+					storeDiff ($text, $oldtext, $pfile);
 					file_put_contents($pagefile, $text);
-					$pg2 = substr ($pagefile, 0, strlen($pagefile)-4).".bak"; 
-					copy ($pagefile, $pg2);
+					copy ($pagefile, $pgbak);
 				}
 				else 
 					$demotxt = "\n\nYou CANNOT save page in the demonstration\n\n\n";
@@ -89,12 +95,8 @@ if (isset($_POST['texta']) && isset($_POST['submit']) && $_POST['submit']=="Save
 	}	
 }
 
-function storeDiff ($newtext, $oldtext, $pagefile) {
-	$filediff = substr ($pagefile, 0, strlen($pagefile)-4).".dif"; 
-	if (isset($_SERVER['PHP_AUTH_USER']))  // not valid for all php installations
-		$author = $_SERVER['PHP_AUTH_USER'];
-	else // use what is defined in .htaccess
-		$author = (isset($_SERVER['REMOTE_USER'])?$_SERVER['REMOTE_USER']:"unknown");
+function storeDiff ($newtext, $oldtext, $pfile) {
+	$filediff = "hist/".$pfile.".dif"; 
 	$opcodes = FineDiff::getDiffOpcodes($newtext, $oldtext);	
 	$delta = strlen($newtext)-strlen($oldtext); // [5]
 	$rev = isset($_POST['revision']) ? $_POST['revision'] :"";	// [3]
@@ -103,21 +105,22 @@ function storeDiff ($newtext, $oldtext, $pagefile) {
 	fwrite ($fp,$headiff,strlen($headiff));  
 	fwrite ($fp,$opcodes,strlen($opcodes)); // length fixed to stop magic quotes
 }
-
 ?>
 <!-- HTML form -->
-<form name = "myform" action="edit.php" method="post">
-File name:<input id="fileinp" type="text" name="filename" value="<?php echo $pfile; ?>">
+<form name = "myform" method="post">
+File name:<input id="fileinp" type="text" name="flname" value="<?=$pfile?>">
 <input id="btnload" type="submit" name="submit" value="Load"> 
 &nbsp; Go to page:<input type="text" name="gopage"><input id="gpg" type="submit" name="gpg" value="GO">
-<a href="history.php?hpage=<?php echo $pfile ?>"><button type="button">History</button></a>
+<a href="history.php?hpage=<?=$pfile?>"><button type="button">History</button></a>
 <a href="dragdrop.htm" target ="_blank"><button type="button">upLoad images</button></a>
-<?php echo " Author: ".$auth;?><br>
+ Author: <?=$author?><br>
 <!--?php echo "sha1:".$_POST['sha1']." submit: ".$_POST['submit']." force save: ".$_POST['forcesave']; ?-->
-<textarea name="texta" id="texta" class="panecontainer"><?php echo $demotxt.mb_convert_encoding($text, 'HTML-ENTITIES', 'UTF-8');?></textarea>
-Revision: <input id="revision" type="text" name="revision"><input id="svp" type="submit" name="submit" value="Save page"/><input type="reset" value="Reset"/>
-<input type="hidden" name="sha1" value="<?php echo $sha1 ?>"/>
-<input type="hidden" name="forcesave" value="no save"/> 
+<textarea name="texta" id="texta" class="panecontainer"><?=$demotxt.$textd?></textarea>
+Revision: <input id="revision" type="text" name="revision">
+<input id="svp" type="submit" name="submit" value="Save page"/>
+<input type="reset" value="Reset"/>
+<input type="hidden" name="sha1" value="<?=$sha1?>"/>
+<input type="hidden" name="forcesave" value="no save"/> <!--modified by JS--> 
 </form>
 <div id="pglist" class="pgx"></div> 
 <div id="imglist" class="pgx"></div> 
@@ -128,7 +131,7 @@ Revision: <input id="revision" type="text" name="revision"><input id="svp" type=
     <input type='button' value='no' id='btnNo' />
 	<input type='button' value='abort' id='btnAbort' />
 </div>
-<?php echo $warn ?>
+<?=$warn?>
 <script src="edit.js"></script>
 </body>
 </html>

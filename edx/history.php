@@ -9,16 +9,16 @@
 include 'aql.php'; 
 include 'finediff.php';
 
-	$pfile ="hlp";
-	if (isset($_GET['hpage'])) 
-		$pfile = $_GET['hpage'];
-	$lnks = getTabDiff ($pfile); 
+$pfile ="hlp";
+if (isset($_GET['hpage'])) 
+	$pfile = $_GET['hpage'];
+$lnks = getTabDiff ($pfile); 
 	
 function getTabDiff ($pfile) {
 	global $fldir;
 	$diff=""; $hdiff=[]; $opc=[]; $oph=[]; $nbdiff=0; $i=0;
 	$pgfile = $fldir."/".$pfile.".txt";
-	$filediff = $fldir."/".$pfile.".dif";
+	$filediff = "hist/".$pfile.".dif";
 	$fp = fopen($filediff, "r");
 	while (($buffer = fgets($fp)) !== false) {
 		$hdiff [$i] =$buffer;
