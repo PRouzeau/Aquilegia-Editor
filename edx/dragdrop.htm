@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en"> <!-- from a demo of http://www.htmlgoodies.com/html5/javascript/drag-files-into-the-browser-from-the-desktop-HTML5.html --> 
+<head>
+<meta charset=utf-8 />
+<title>Drop your images files in the box</title>
+<style type="text/css">
+body {
+	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+	margin:0;
+	padding:0;
+	background-color:#fcfffc;
+}
+h1 {
+	font-size: 20px;
+	margin:0;
+	padding:2px 12px;
+}
+input, button {
+	font-size: 16px;
+}
+p {
+	margin:0;
+	padding:0; 
+	overflow-wrap: break-word;
+	word-break: break-all;
+}
+#drop {
+	height: 75px;
+	width: 275px;
+	border: 2px solid red;
+	margin: 5px;
+	padding: 4px;
+	background-color:#dff0ff;
+}
+#status {
+	padding:2px 8px;
+	display:inline-block;
+}
+#list {
+	width:275px; 
+	margin:6px; 
+	padding:4px;
+	border: 1px solid; 
+	overflow-wrap: break-word;
+	height:calc(100vH - 200px);	
+	background-color:#ffffff;
+}
+#cont {
+	height:calc(100% - 90px);	
+}
+#leftcol {
+	display:table-cell; 
+	vertical-align: top;
+	height:calc(100vH - 200px);	 
+}
+#images {
+	display:table-cell;
+	padding: 4px;
+	border:1px solid;
+	width: 100%;
+	background-color:#ffffff;
+}
+.divimg {
+	display:inline-block;
+	width :130px;
+	margin: 2px;
+}
+table {
+	table-layout:fixed;
+}
+</style>
+</head>
+<body>
+	<h1>Upload your images to Aquilegia directories</h1>
+	<div id="dheader">
+	<input type="button" value= "Upload->display (/d)" onclick = "uploadto('d/')"/>
+	<input type="button" value= "Upload->full size (/f)" onclick = "uploadto('f/')"/>
+	<input type="button" value= "Resize and upload" onclick = "uploadto('')"/>
+	<input type="reset"  value = "Reset" onclick = "history.go(0)"/>
+	<a href="http://aquilegia.blue/#hlp/images" target="_blank"><button type="button">help</button></a>
+	<input type="button" value= "Update image list" onclick = "updatelist()"/>
+	</div>
+	<div id="status">Drag the files from a folder to a selected area ...</div>
+	<div id="cont">
+		<div id="leftcol">
+			<div id="drop">Drop files here. Once done, click one of the upload buttons.</div>
+			<div id="list"></div>
+		</div>
+		<div id="images"></div>
+	</div>
+</body>
+<script type="text/javascript" src="../js/jquery-2.2.1.min.js"></script>
+<script type="text/javascript">
+"use strict";
+var fullSize = 1600; // max dimension of resized image going in 'fullscreen' directory
+var dispSize = 796; // max dimension of resized image going in 'display' directory
+var imgQuality = 0.75; //quality of the image when doing automatic resizing
+// Initialisation
+var iconSize = 128;
+var idxLoad = 1; // first image index
+var prefixLoad =""; //directory 
+var isResize = false; // flag indicating resizing
+var largeLoad = false; // flag for loop while resizing
+var maxFileSize = 1000000;
+var tabImg=[];
+
+if (window.FileReader) { //browser  handle file reader
+	addEventHandler(window, 'load', function() {
+		var status = $0('status');
+		var drop   = $0('drop');
+		var list  = $0('list');
+		var images= $0('images');
+		var imglab, divimg, img, idx=1;
+		function cancel(e) {
+			if (e.preventDefault) { e.preventDefault(); }
+			return false;
+		}
+		// Tells the browser that we *can* drop on this target
+		addEventHandler(drop, 'dragover', cancel);
+		addEventHandler(drop, 'dragenter', cancel);
+		addEventHandler(drop, 'drop', function (e) {
+			e = e || window.event; // get window.event if e argument missing (in IE)   
+			if (e.preventDefault) { e.preventDefault(); } // stops the browser from redirecting off to the image.
+			var dt    = e.dataTransfer;
+			var files = dt.files;
+			for (var i=0; i<files.length; i++) {
+				var file = files[i];
+				var ext = file.name.substr(-4).toLowerCase();
+				if (ext==".png"||ext==".jpg"||ext==".svg") {
+					var reader = new FileReader();
+					file.num=idx;
+					//attach event handlers here...
+					reader.readAsDataURL(file);
+					addEventHandler(reader, 'loadend', function(e, file) {
+						var bin          = this.result; 
+						var newFile      = document.createElement('div');
+						newFile.innerHTML = '<p>'+file.num+":"+file.name+' size:'+file.size+' B</p>';
+						list.appendChild (newFile);  
+						var fileNumber = list.getElementsByTagName('div').length;
+						status.innerHTML = fileNumber < files.length 
+										 ? 'Loaded 100% of file '+fileNumber+' of '+files.length+'...' 
+										 : 'Done loading. processed '+fileNumber+' files.';
+						img = document.createElement("img"); 
+						tabImg[file.num] = img;
+						img.file = file;   
+						img.width = iconSize;
+						img.style.border = "1px solid";
+						imglab = document.createElement("p"); // to add image number below it
+						imglab.innerHTML = file.num; //added property: non standard 
+						divimg = document.createElement("div"); 
+						divimg.className = "divimg";
+						divimg.appendChild(img);
+						divimg.appendChild(imglab);
+						images.appendChild(divimg);
+						img.src = bin; // start the uploading
+					}.bindToEventHandler(file));
+					idx+=1;
+				}
+			}
+			return false;
+		});
+		Function.prototype.bindToEventHandler = function bindToEventHandler() {
+			var handler = this;
+			var boundParameters = Array.prototype.slice.call(arguments);
+			//create closure
+			return function(e) {
+				e = e || window.event; // get window.event if e argument missing (in IE)   
+				boundParameters.unshift(e);
+				handler.apply(this, boundParameters);
+			}
+		};
+	});
+} 
+else  
+	$0('status').innerHTML = 'Your browser does not support the HTML5 FileReader.';
+
+function addEventHandler(obj, evt, handler) {
+    if (obj.addEventListener) obj.addEventListener(evt, handler, false);  // W3C method
+    else if (obj.attachEvent) obj.attachEvent('on'+evt, handler);  // IE method.
+    else obj['on'+evt] = handler;  // Old school method.
+}
+
+function uploadto(prefix) {
+	prefixLoad = prefix;
+	if (tabImg.length>1) {
+		$0("images").innerHTML="Please wait the uploading...";
+		if (prefix) 
+			isResize = false;
+		else {
+			isResize = true;
+			largeLoad = false;
+			prefixLoad = "d/";
+		}	
+		uploadImg ();
+	}
+}
+
+function resize(img, size) { // all metadata is lost during resizing
+	var canvas = document.createElement('canvas');
+	var ratio = Math.max (img.naturalWidth/size, img.naturalHeight/size);
+	if (ratio > 1.16) {  // we don't resize if smaller or not much bigger
+		canvas.width = Math.round(img.naturalWidth/ratio);
+		canvas.height = Math.round(img.naturalHeight/ratio);
+		img.width = canvas.width;
+		img.height = canvas.height;
+		var ctx = canvas.getContext("2d");
+		ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+		return canvas.toDataURL(img.file.type, imgQuality); //image binary base64 encoding
+	}
+	else
+		return img.src;
+}
+
+function uploadImg () {
+	function next (data) {
+		var imgres = document.createElement("p"); 
+		imgres.innerHTML=data;
+		$0("images").appendChild(imgres);
+		if (isResize) {// we cycle twice for resizing
+			if (largeLoad) {
+				idxLoad++;
+				largeLoad=false;
+				prefixLoad = "d/";
+			}	
+			else {
+				largeLoad=true;
+				prefixLoad = "f/";
+			}
+		}	
+		else
+			idxLoad++;
+		if (idxLoad<tabImg.length)
+			uploadImg();
+		else 
+			alert ("Uploading finished");
+	}
+	if (isResize) 
+		var src = resize(tabImg[idxLoad], largeLoad?fullSize:dispSize);
+	else 		
+		var src = tabImg[idxLoad].src;
+	if  (src.length > (maxFileSize*1.37)) { // no load of large files - base 64 files are 37% larger than binary
+		next (tabImg[idxLoad].file.name+ " too large, max: "+maxFileSize+" Bytes");
+	}
+	else {	
+		var fd = new FormData();
+		fd.append('fname', prefixLoad+tabImg[idxLoad].file.name);
+		fd.append('data', src);
+		$.ajax({
+			type: 'POST',
+			url: 'savimg.php',
+			data: fd,
+			processData: false,
+			contentType: false
+		}).done(function(data) {
+			next (data);
+		});
+	}
+}
+
+function updatelist() { // run php function updating the image list
+	$.ajax({
+		type: 'POST',
+		url: 'imglist.php',
+	}).done(function(data) {
+		alert(data);
+	});
+}
+
+//Utility -----------
+function $0(id) { // Search DOM by Id
+	var r = document.getElementById(id); 
+	if (!r) {
+		if (!arguments[1]) alert ("element "+id+ " not found"); // can stop the error if 2nd param =true;
+		return null;
+	}
+	else 
+		return  r;
+} //return a DOM element
+
+</script>
+</html>

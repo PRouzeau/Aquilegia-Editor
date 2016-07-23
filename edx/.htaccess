@@ -1,0 +1,11 @@
+RewriteEngine on
+RewriteRule .* - [E=REMOTE_USER:%{HTTP:Authorization},L] 
+
+AuthName "Protected edition"
+AuthType Basic
+AuthUserFile "/home/yoursite/www/edx/.aqlpass"
+Require valid-user
+
+DirectoryIndex edit.php
+
+

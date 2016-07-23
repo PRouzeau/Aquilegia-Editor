@@ -1,0 +1,159 @@
+body {
+	margin:0;
+	border:0;
+	padding:0;
+	font:16px sans-serif;
+	background-color:#fcfffc;
+}
+body > h1 {
+	margin:0 0 0.5em 0;
+	font:17px sans-serif;
+	background-color:#def
+}
+body > div {
+	padding:2px
+}
+p {
+	margin: 0 3px 2px 3px;
+	margin-top:0;
+}
+ins {
+	color:green;
+	background:#dfd;
+	text-decoration:none
+}
+del {
+	color:red;
+	background:#fdd;
+	text-decoration:none
+}
+form {
+	padding:0;
+	margin:0;
+}
+
+input, button {
+	font:16px sans-serif;
+}
+
+input[type="text"] {
+	width: 140px;
+}
+
+#revision {
+	width: 300px;
+}
+
+#params {
+	margin:1em 0;
+	font: 16px sans-serif
+}
+.panecontainer > p {
+	margin:0;
+	border:1px solid #bcd;
+	border-bottom:none;
+	padding:1px 3px;
+	background:#def;
+	font:16px sans-serif
+}
+.panecontainer > p + div {
+	margin:0;
+	padding:2px 0 2px 2px;
+	border:1px solid #bcd;
+	border-top:none
+}
+.pane {
+	margin:0;
+	padding:0;
+	border:0;
+	width:100%;
+	min-height:20em;
+	overflow:auto;
+	font:15px "DejaVu Sans Mono",Consolas,Monaco,"Lucida Console","Liberation Mono", monospace;
+}
+#htmldiff {color:gray}
+#htmldiff.onlyDeletions ins {display:none}
+#htmldiff.onlyInsertions del {display:none}
+
+#myform {
+	/* background-color:#ffffff */
+}
+
+#texta {
+	width: 99.5%;
+	height: calc(100% - 106px); 
+	resize: none;
+}
+
+.pgx  {
+	display:none;
+	position: fixed;
+	font: 15px Arial, Helvetica, sans-serif;
+	background-color: #F0F0F0;
+	border: 1px solid;
+	border-radius: 4px;
+	padding: 6px;
+	z-index: 99;
+	max-height: calc(100% - 30px); /*no space between calc and parenthesis */
+	max-width: 240px; 
+	overflow-y:auto;
+}
+
+.imgx  {
+	display:none;
+	position: fixed;
+	left:800px;
+	background-color: #FFFFFF;
+	padding: 0;
+	margin:0;
+	z-index: 101;
+}
+
+#pglist { 
+	top: 48px;
+	left: 425px;
+}
+
+#imglist { 
+	top: 6px;
+	left: 480px;
+}
+
+#modal_dialog {
+	display:none;
+	position: fixed;
+	font: 15px Arial, Helvetica, sans-serif;
+	background-color: #FFFFFF;
+	border: 1px;
+	border-style: solid;
+	border-radius: 4px;
+	min-width: 120px;
+	padding: 6px;
+	left:500px;
+	top: 200px;
+	margin:0;
+	z-index: 101;
+}
+
+#modal_dialog > input {
+	min-width: 80px;
+}
+
+#warn_edit { /* window warning of concurrent edition */
+	position: fixed;
+	font: 15px Arial, Helvetica, sans-serif;
+	background-color: #F7BE81;
+	border: 1px;
+	border-style: solid;
+	border-radius: 4px;
+	min-width: 120px;
+	padding: 6px;
+	left:80px;
+	top: 180px;
+	margin:0;
+	z-index: 101;
+}
+
+
+
+
