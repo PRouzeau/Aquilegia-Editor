@@ -42,9 +42,9 @@ include 'aql.php';
 include 'finediff.php';
 
 if (isset($_SERVER['PHP_AUTH_USER']))  // not valid for all php installations
-		$author = $_SERVER['PHP_AUTH_USER'];
-	else // use what is defined in .htaccess
-		$author = (isset($_SERVER['REMOTE_USER'])?$_SERVER['REMOTE_USER']:"unknown");
+	$author = $_SERVER['PHP_AUTH_USER'];
+else // use what is defined in .htaccess
+	$author = isset($_SERVER['REMOTE_USER'])?$_SERVER['REMOTE_USER']:"unknown";
 
 if (isset($_POST['flname'])) {
 	$pfile = normPage($_POST['flname']);
@@ -80,10 +80,10 @@ if ($pfile && isset($_POST['texta']) && isset($_POST['submit']) && $_POST['submi
 		$shaold = sha1($oldtext);
 		if (sha1($text)!=$shaold) { // there is really a modification
 			if (isset($_POST['sha1'])) $shapage = $_POST['sha1'];
-			if ($shapage==$shaold || (isset($_POST['forcesave']) && $_POST['forcesave']=="force save"))  { 
+			if ($shapage==$shaold || ($oldtext=="") || (isset($_POST['forcesave']) && $_POST['forcesave']=="force save"))  { 
 				$sha1 = sha1($text); // the file is saved, so this is a new $sha1
 				if (!$demo) {
-					storeDiff ($text, $oldtext, $pfile);
+					storeDiff ($text, $oldtext);
 					file_put_contents($pagefile, $text);
 					copy ($pagefile, $pgbak);
 				}
@@ -95,7 +95,8 @@ if ($pfile && isset($_POST['texta']) && isset($_POST['submit']) && $_POST['submi
 	}	
 }
 
-function storeDiff ($newtext, $oldtext, $pfile) {
+function storeDiff ($newtext, $oldtext) {
+	global $author, $pfile;
 	$filediff = "hist/".$pfile.".dif"; 
 	$opcodes = FineDiff::getDiffOpcodes($newtext, $oldtext);	
 	$delta = strlen($newtext)-strlen($oldtext); // [5]
