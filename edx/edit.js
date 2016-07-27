@@ -22,18 +22,24 @@ $(document).ready(function(){
 		}	
 		else 
 			alert(stext+' not found'); // alert word not found
-	}	
+	}
+	$('#texta').click(function() { 
+		$("#pgsuggest").hide();
+	});
+	$("#pgsuggest").click(function() { 
+		$('#pgsuggest').hide();
+	});
 	$("#pglist").click(function() { 
 		$('#pglist').hide();
-	})
+	});
 	$("#imglist").click(function() { 
 		$('#imglist').hide();
 		$('#imgtip').hide();
-	})
+	});
 	$("#imgtip").click(function() { 
 		$('#imglist').hide();
 		$('#imgtip').hide();
-	})
+	});
 	$('#fileinp').hover(function(){
 		window.fltimeout = setTimeout(function(){
 			$.get("listpages.php", function(data) { // get external pages from php
@@ -45,12 +51,10 @@ $(document).ready(function(){
 				var i=0, ll="";
 				for (var i=0; i<pagelist.length; i++) 
 					ll+="<p><a href='javascript:insFile(\""+pagelist[i]+"\");'>"+pagelist[i]+"</a></p>";
-				$("#pglist").html(ll);
-				$("#pglist").css("left","75px");
-				$("#pglist").css("top","20px");
-				$("#pglist").show();
+				$("#pgsuggest").html(ll);
+				$("#pgsuggest").show();
 			});
-		}, 800);
+		}, 1000);
 	}, function(){
 		clearTimeout(window.fltimeout);    
 	});
@@ -63,6 +67,7 @@ function insFile(file) {
 
 function forceSave() {
 	document.myform.forcesave.value = "force save";
+	$("#warn_edit").hide();
 	$("#svp").click(); // document.myform.submit();  do not define submit value
 }
 
@@ -97,7 +102,7 @@ function selPage (){
 		//	contentType: 'application/text',
 			success: function(data) {
 				//alert (data);
-				loadPage("aqlpreview");
+				dispPage("aqlpreview");
 			},
 			error: function() {
 				alert('An error occurred while saving the page');
@@ -106,12 +111,82 @@ function selPage (){
 	}
 }
 
-function loadPage(page) {
+function dispPage(page) {
 	var loc = window.location.href;
 	loc = loc.substring(0, loc.lastIndexOf("/"));
 	loc = loc.substring(0, loc.lastIndexOf("/")+1);
 	var ad = loc+"#hlp/"+page;
 	window.open(ad, "_blank");
+}
+
+var loadedFile ="";
+function loadPage(e) {
+	var $form = $(e.target).parent();
+	var store= document.myform.texta.value;
+	document.myform.texta.value=""; // to not send the text for loading
+	$.ajax({
+		url: 'load.php',
+		type: 'POST',
+		data: $form.serialize(),
+		success: function(result) {
+			var tabres = result.split ("\n",2);
+			var res = tabres[0].split ("res:")[1];
+			if (res=="OK") {
+				document.myform.sha1.value = tabres[1].split ("sha1:")[1]
+				document.myform.texta.value = result.split ("text:")[1];
+				loadedFile = document.myform.flname.value;
+			}
+			else {
+				document.myform.flname.value = loadedFile;
+				alert(res);
+			}	
+		},
+		error: function() {
+			document.myform.flname.value = loadedFile;
+			alert('An error occurred while loading the page');
+		}
+	});
+	document.myform.texta.value=store;
+}
+
+function history() {
+	window.open ('history.php?hpage='+document.myform.flname.value,'_self',false);
+}
+
+function savePage(e) {
+	var $form = $(e.target).parent();
+	if (!document.myform.revision.value.trim()) {
+		alert ("There is no revision tag");
+		return;
+	}
+	$.ajax({
+		url: 'save.php',
+		type: 'POST',
+		data: $form.serialize(),
+		success: function(result) {
+			var tabres = result.split ("\n",2);
+			if (tabres[0].substr(0,4)=="res:") {
+				var res = tabres[0].split ("res:")[1];
+				if (res=="OK") {
+					document.myform.sha1.value = tabres[1].split ("sha1:")[1]
+					document.myform.revision.value ="";
+					var dt = new Date();
+					$("#msgresult").html(dt.getTime());
+				}	
+				else if (res=="concurrent")
+					$("#warn_edit").show();
+				else if (res=="unchanged") 
+					$("#msgresult").html("unchanged");
+				else	
+					alert (res);
+			}
+			else 
+				alert ("Program problem, 'save.php' returned:\n"+result);
+		},
+		error: function() {
+			alert('An error occurred while saving the page');
+		}
+	});
 }
 
 function listPages () { // internal page for scrolling

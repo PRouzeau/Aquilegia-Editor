@@ -113,6 +113,10 @@ input[type="text"] {
 	top: 48px;
 	left: 425px;
 }
+#pgsuggest { 
+	top: 20px;
+	left: 75px;
+}
 
 #imglist { 
 	top: 6px;
@@ -140,6 +144,7 @@ input[type="text"] {
 }
 
 #warn_edit { /* window warning of concurrent edition */
+	display:none;
 	position: fixed;
 	font: 15px Arial, Helvetica, sans-serif;
 	background-color: #F7BE81;
