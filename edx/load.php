@@ -8,11 +8,6 @@ $textd="";
 include 'aql.php'; 
 include 'finediff.php';
 
-if (isset($_SERVER['PHP_AUTH_USER']))  // not valid for all php installations
-	$author = $_SERVER['PHP_AUTH_USER'];
-else // use what is defined in .htaccess
-	$author = isset($_SERVER['REMOTE_USER'])?$_SERVER['REMOTE_USER']:"unknown";
-
 if (isset($_POST['flname'])) {
 	$pfile = normPage($_POST['flname']);
 	$lng = strlen($pfile); 
