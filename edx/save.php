@@ -58,6 +58,7 @@ if ($pfile && isset($_POST['texta'])) { // save the text contents
 	else 
 		$res = "res:empty text\n";
 	echo $res; 
+	buildlist();
 }
 
 function storeDiff ($newtext, $oldtext) {
@@ -70,5 +71,18 @@ function storeDiff ($newtext, $oldtext) {
 	$fp = fopen($filediff, "a");
 	fwrite ($fp,$headiff,strlen($headiff));  
 	fwrite ($fp,$opcodes,strlen($opcodes)); // length fixed to stop magic quotes
+}
+
+function buildlist() {
+	global $fldir;
+	$data = "";
+	$pagelist = scandir($fldir);
+	$pageexcl = ["hlp.txt","aqlpreview.txt","imglist.txt","pagelist.txt","aquilegia_syntax.txt"];
+	sort ($pagelist);
+	foreach ($pagelist as $page){
+		if (substr ($page, strlen ($page)-4) == ".txt" && !in_array($page, $pageexcl))
+			$data.= substr($page, 0, strlen ($page)-4)."\n"; 
+	}
+	return file_put_contents($fldir.'/pagelist.txt',$data);
 }
 ?>

@@ -120,6 +120,7 @@ function dispPage(page) {
 }
 
 var loadedFile ="";
+var origFile="";
 function loadPage(e) {
 	var $form = $(e.target).parent();
 	var store= document.myform.texta.value;
@@ -134,6 +135,7 @@ function loadPage(e) {
 			if (res=="OK") {
 				document.myform.sha1.value = tabres[1].split ("sha1:")[1]
 				document.myform.texta.value = result.split ("text:")[1];
+				origFile  = document.myform.texta.value;
 				loadedFile = document.myform.flname.value;
 			}
 			else {
@@ -154,11 +156,40 @@ function history() {
 }
 
 function savePage(e) {
+var dtidx=0, j=1, oldpn, newpn, tabnewpage=[];
 	var $form = $(e.target).parent();
 	if (!document.myform.revision.value.trim()) {
 		alert ("There is no revision tag");
 		return;
 	}
+	var taboldpage = origFile.split ("■");
+	if (loadedFile=="aquilegia_syntax")
+		tabnewpage[0] = document.myform.texta.value; // no split as separator exist in block
+	else 
+		tabnewpage = document.myform.texta.value.split ("■");	
+	var today = "(:date "+aqldate()+":)";
+	if (tabnewpage.length>1) 
+		for (var i=1; i<tabnewpage.length; i++) {
+			oldpn = hlpNamePage (taboldpage[j].split("\n",1)[0].split(/[,;]/)[0]);
+			newpn = hlpNamePage (tabnewpage[i].split("\n",1)[0].split(/[,;]/)[0]);
+			if 	((taboldpage[j]!=tabnewpage[i]) && tabnewpage[i].match(/\(:date.*?:\)/))
+				tabnewpage[i] = tabnewpage[i].replace(/\(:date.*?:\)/, today);  
+			else if (!tabnewpage[i].match(/\(:date.*?:\)/)){
+				dtidx = tabnewpage[i].split("\n", 2).join("\n").length+1;
+				tabnewpage[i] = insertStr (tabnewpage[i], dtidx, today); 
+			}
+			if (oldpn==newpn) j=j+1;		
+		}
+	else {
+		if (taboldpage[0]!=tabnewpage[0] && tabnewpage[0].match(/\(:date.*?:\)/)) 
+			tabnewpage[0] = tabnewpage[0].replace(/\(:date.*?:\)/,today);  	
+		else if (!tabnewpage[0].match(/\(:date.*?:\)/)) {
+			dtidx = tabnewpage[0].split("\n", 2).join("\n").length+1;
+			tabnewpage[0] = insertStr (tabnewpage[0], dtidx, today); 
+		}
+	}	
+	//alert (tabnewpage.join("■"));
+	document.myform.texta.value=tabnewpage.join("■"); 
 	$.ajax({
 		url: 'save.php',
 		type: 'POST',
@@ -359,3 +390,20 @@ function dialogsrp() { //confirm box as confirm()  don't work in FireFox, it hid
     });
 }
 
+//== Utility functions ========================================================
+function aqldate(){
+	var mth = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+	var d = new Date();
+	var hr  = ("0" + Number(d.getHours())).slice(-2);
+	var min = ("0" + Number(d.getMinutes())).slice(-2);
+	return d.getDate()+' '+mth[d.getMonth()]+' '+d.getFullYear()+' '+hr+":"+min;
+}
+
+function hlpNamePage (name) { // transform string in page name - normalise or escape accented chars ?
+	return z(name).trim().toLowerCase().replace(/[\t ]+/g ,'_');
+}
+
+function insertStr (source, index, string) {// insertion of a string within another - index CAN BE undef
+    return (index) ? source.substr(0, index) + string + source.substr(index) : source;
+}
+function z(val) {return (val||'');} // Make empty strings of undefined

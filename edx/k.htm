@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<!--written by Pierre ROUZEAU
+	licensed under the terms of the GPL v2 or any later version
+	see http://www.gnu.org/licenses/gpl-2.0.html
+-->
+<html lang="en">
+<head>	<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width">
+		<meta name="description" content="wiki converter">
+		<meta name="author" content="Pierre ROUZEAU">
+		<title id="title">Wiki converter</title>
+		<link href="edit.css" rel="stylesheet"> 
+</head>
+<button id="btn-save" onclick="panelcvt()">Convert</button><br>
+<form name="myform">
+<div class="panecontainer" style="display:inline-block;width:99.5%"><p>From</p>
+<div><textarea name="panelsrc" class="pane"></textarea></div></div>
+</form>
+<div class="panecontainer" style="width:99.5%">
+	<div id="panelcvt" class="pane" style="white-space:pre-wrap" onclick="panelsel(this)"></div>
+</div>
+<script src="convert_wkm.js"></script>
+</body>
