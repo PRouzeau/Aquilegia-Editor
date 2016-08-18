@@ -243,7 +243,7 @@ function uploadImg () {
 	}
 	else {	
 		var fd = new FormData();
-		fd.append('fname', prefixLoad+tabImg[idxLoad].file.name);
+		fd.append('fname', prefixLoad+tabImg[idxLoad].file.name.toLowerCase());
 		fd.append('data', src);
 		$.ajax({
 			type: 'POST',
