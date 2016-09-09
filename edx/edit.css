@@ -37,8 +37,13 @@ input, button {
 }
 
 input[type="text"] {
-	width: 140px;
+	width: 120px;
 }
+
+#gopage input { 
+	width:100px; /* don't work to counter above input */
+}
+
 
 #revision {
 	width: 300px;
@@ -85,6 +90,21 @@ input[type="text"] {
 	resize: none;
 }
 
+.pgs  {
+	display:none;
+	position: fixed;
+	font: 15px Arial, Helvetica, sans-serif;
+	background-color: #F0F0F0;
+	border: 1px solid;
+	border-radius: 4px;
+	padding: 6px;
+	z-index: 99;
+	max-height: calc(100% - 60px); /*no space between calc and parenthesis */
+	max-width: 280px; 
+	overflow-y:auto;
+}
+
+
 .pgx  {
 	display:none;
 	position: fixed;
@@ -94,9 +114,12 @@ input[type="text"] {
 	border-radius: 4px;
 	padding: 6px;
 	z-index: 99;
-	max-height: calc(100% - 30px); /*no space between calc and parenthesis */
-	max-width: 240px; 
+	max-height: calc(100% - 60px); /*no space between calc and parenthesis */
+	max-width: 500px; 
 	overflow-y:auto;
+    -webkit-column-count: 2; /* Chrome, Safari, Opera */
+    -moz-column-count: 2; /* Firefox */
+    column-count: 2;
 }
 
 .imgx  {
@@ -107,6 +130,15 @@ input[type="text"] {
 	padding: 0;
 	margin:0;
 	z-index: 101;
+}
+
+.pindent {
+	margin-left:12px;
+}
+
+.secindent {
+	text-indent:14px;
+    margin-left:-12px;
 }
 
 #pglist { 

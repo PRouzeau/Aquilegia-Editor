@@ -1,4 +1,8 @@
 "use strict";
+var aqlO = {};
+var xpage="", xpara="";
+var pagePos=[], pagePosEnd=[], pageName=[], pageNameNor=[];
+
 /* Aquilegia editor (c) Pierre Rouzeau 2016   Licence GPL V2 or any later version + MIT  */
 /* Use finediff by Raymond Hill and Markitup by Jay Salvat - MIT license*/
 $(document).ready(function(){
@@ -58,6 +62,22 @@ $(document).ready(function(){
 	}, function(){
 		clearTimeout(window.fltimeout);    
 	});
+	var url = window.location.href; 
+	var hash = url.split('#')[1];
+	if (hash) {
+		var xfile = hash.split("/",1)[0].split("!")[0]; // 
+		xpage = hash.split("/")[1];
+		if (xpage) {
+			xpara = xpage ? xpage.split("!")[1] : ""; 
+			xpage = xpage ? xpage.split("!")[0] : ""; 
+		}
+		else {
+			xpara = hash.split("/",1)[0].split("!")[1]; 
+		}	
+		xpara = xpara ? xpara : "";
+		document.myform.flname.value = xfile;
+		loadPage();
+	}
 });
 
 function insFile(file) {
@@ -122,7 +142,22 @@ function dispPage(page) {
 var loadedFile ="";
 var origFile="";
 function loadPage(e) {
-	var $form = $(e.target).parent();
+	function findPara (content) {
+		var pageTab = content.split('\n');
+		var line, linelg, posPara=0;
+		for (var j=0; j<pageTab.length; j++) {
+			linelg = pageTab[j].length;
+			if (pageTab[j].substr(0,2) == "==") {
+				line = pageTab[j].replace (/^={2,4}[ ]*/g,"");
+				if (xpara == hlpDefAnchor(line.trim()))
+					break;	
+			}
+			posPara += linelg+1;
+		}
+		return [linelg, posPara];
+	}
+	//var $form = $(e.target).parent(); // any use ?
+	var $form = $("#xform"); // Jquery ref (to use Serialize function)
 	var store= document.myform.texta.value;
 	document.myform.texta.value=""; // to not send the text for loading
 	$.ajax({
@@ -137,6 +172,21 @@ function loadPage(e) {
 				document.myform.texta.value = result.split ("text:")[1];
 				origFile  = document.myform.texta.value;
 				loadedFile = document.myform.flname.value;
+				if (xpage) {
+					listP(); // list pages in the file
+					var i = pageNameNor.indexOf(xpage);
+					if (xpara) {
+						var t = findPara (document.myform.texta.value.substring (pagePos[xpage], pagePosEnd[xpage]));
+						goPos(pagePos[xpage]+t[1], t[0], 120);
+					}
+					else
+						goPos(pagePos[xpage], xpage.length, 120);
+					xpage = "";
+				}
+				else { // independant page
+					var t = findPara (document.myform.texta.value);
+					goPos(t[1], t[0], 120);
+				}
 			}
 			else {
 				document.myform.flname.value = loadedFile;
@@ -155,13 +205,19 @@ function history() {
 	window.open ('history.php?hpage='+document.myform.flname.value,'_self',false);
 }
 
+function resetPage() {
+	document.myform.texta.value=origFile;
+}	
+
 function savePage(e) {
 var dtidx=0, j=1, oldpn, newpn, tabnewpage=[];
 	var $form = $(e.target).parent();
-	if (!document.myform.revision.value.trim()) {
-		alert ("There is no revision tag");
+	var revtag = document.myform.revision.value.trim();
+	if (!revtag) {
+		alert ("Page not saved\nThere is no revision tag");
 		return;
 	}
+	revtag = ":"+revtag;
 	var taboldpage = origFile.split ("■");
 	if (loadedFile=="aquilegia_syntax")
 		tabnewpage[0] = document.myform.texta.value; // no split as separator exist in block
@@ -170,13 +226,18 @@ var dtidx=0, j=1, oldpn, newpn, tabnewpage=[];
 	var today = "(:date "+aqldate()+":)";
 	if (tabnewpage.length>1) 
 		for (var i=1; i<tabnewpage.length; i++) {
-			oldpn = hlpNamePage (taboldpage[j].split("\n",1)[0].split(/[,;]/)[0]);
+			oldpn = hlpNamePage (z(taboldpage[j]).split("\n",1)[0].split(/[,;]/)[0]);
 			newpn = hlpNamePage (tabnewpage[i].split("\n",1)[0].split(/[,;]/)[0]);
-			if 	((taboldpage[j]!=tabnewpage[i]) && tabnewpage[i].match(/\(:date.*?:\)/))
+		/*	var o = taboldpage[j];	var n = tabnewpage[i];
+			var on = taboldpage[j].length;	var nn = tabnewpage[j].length; */
+			if 	((taboldpage[j]!=tabnewpage[i]) && tabnewpage[i].match(/\(:date.*?:\)/)) {
 				tabnewpage[i] = tabnewpage[i].replace(/\(:date.*?:\)/, today);  
+				revtag = "/"+newpn+revtag;
+			}	
 			else if (!tabnewpage[i].match(/\(:date.*?:\)/)){
 				dtidx = tabnewpage[i].split("\n", 2).join("\n").length+1;
 				tabnewpage[i] = insertStr (tabnewpage[i], dtidx, today); 
+				revtag = "/"+newpn+revtag;
 			}
 			if (oldpn==newpn) j=j+1;		
 		}
@@ -189,7 +250,8 @@ var dtidx=0, j=1, oldpn, newpn, tabnewpage=[];
 		}
 	}	
 	//alert (tabnewpage.join("■"));
-	document.myform.texta.value=tabnewpage.join("■"); 
+	document.myform.texta.value = tabnewpage.join("■"); 
+	document.myform.revision.value = revtag;
 	$.ajax({
 		url: 'save.php',
 		type: 'POST',
@@ -201,6 +263,7 @@ var dtidx=0, j=1, oldpn, newpn, tabnewpage=[];
 				if (res=="OK") {
 					document.myform.sha1.value = tabres[1].split ("sha1:")[1]
 					document.myform.revision.value ="";
+					origFile = document.myform.texta.value; // save successful, so reset original file
 					var dt = new Date();
 					$("#msgresult").html(dt.getTime());
 				}	
@@ -220,20 +283,33 @@ var dtidx=0, j=1, oldpn, newpn, tabnewpage=[];
 	});
 }
 
+function listP () {
+	pageNameNor = []; // reinit when called multiple times
+	var textastr = $('#texta').val();
+	var res;
+	var regexp = /■([^,\n]*)/g;
+	var pNorm, prec="";
+	while ((res = regexp.exec(textastr)) !== null) {
+		pNorm = hlpNamePage(res[1]);
+		pagePos  [pNorm] = res.index+1;
+		pageName [pNorm] = res[1]; // not normalised
+		pageNameNor.push (pNorm);
+		if (prec) 
+			pagePosEnd[prec] = pagePos [pNorm]-1;
+		prec = pNorm;
+	}
+	pagePosEnd [pNorm] = textastr.length;
+	pageNameNor.sort();	
+}
+
 function listPages () { // internal page for scrolling
+	var ll="";
 	if ($("#pglist").css("display")=="block")
 		$("#pglist").hide();
 	else {
-		var textastr = $('#texta').val();
-		var pos =[], name = [], res, ll="";
-		var regexp = /■([^,\n]*)/g;
-		while ((res = regexp.exec(textastr)) !== null) {
-			pos [res[1]] = res.index+1;
-			name.push (res[1]);
-		}
-		name.sort();
-		for (var i=0; i<name.length; i++)
-			ll+="<p><a href='javascript:goPos("+pos[name[i]]+","+name[i].length+", 100);'>"+name[i]+"</a></p>"
+		listP();
+		for (var i=0; i<pageNameNor.length; i++)
+			ll+="<p><a href='javascript:goPos("+pagePos[pageNameNor[i]]+","+pageNameNor[i].length+", 100);'>"+pageName[pageNameNor[i]]+"</a></p>"
 		$("#pglist").html(ll);
 		$("#pglist").css("left","380px");
 		$("#pglist").css("top","46px");
@@ -242,28 +318,44 @@ function listPages () { // internal page for scrolling
 }
 
 function linkPages () { // all pages to add link
+var tabexclu = ["hlpdef", "hlpfoot", "hlphead", "hlpdiag", "menu"]; // some page already filtered
 	if ($("#pglist").css("display")=="block")
 		$("#pglist").hide();
 	else {
 		$.get("listpages.php", function(data) { // get external pages from php
-			var ll="", clean, npage; // comment
+			var ll="", title, npage, pgl; // comment
 			var pagelist = data.split("\n"); 
-			pagelist.pop();
+			var index = pagelist.indexOf("imglist");
+			if (index > -1) 
+				pagelist.splice(index, 1);
+			pagelist.pop(); // eject last empty line of external pages
 			var textastr = document.myform.texta.value;
 			var i=0, li =[], idx = [], res, ll="";
-			var regexp = /■([^,\n]*)/g;
-			while ((res = regexp.exec(textastr)) !== null) 
-				pagelist.push(res[1]);
-			pagelist.sort();
+			var regexp = /■([^,\n]*).*?\n(.*?)\n/g;
+			while ((res = regexp.exec(textastr)) !== null) {
+				if (tabexclu.indexOf(res[1].toLowerCase())==-1) 
+					pagelist.push(res[2].replace(/^={2,4}/, "").trim()+"♥"+res[1]); // sorted by title, not page name
+			}	
+			pagelist = pagelist.sort(function (a, b) {
+				return a.toLowerCase().localeCompare(b.toLowerCase()); // case insensitive sorting
+			}); 
 			for (var i=0; i<pagelist.length; i++) {
-				clean = pagelist[i].replace (/_/g," ");
-				npage = pagelist[i].trim().toLowerCase().replace (/[\t ]/g,"_");
-				ll+="<p><a href='javascript:insBl(\" %"+clean+"%"+npage+" \");'>"+clean+"</a></p>"
+				pgl = pagelist[i].split("♥");
+				if (pgl[1]) {
+					title = pgl[0];
+					npage = pgl[1];
+				}	
+				else {
+					title = pgl[0].replace (/_/g," ");
+					npage = pgl[0];
+				}	
+				npage = npage.trim().toLowerCase().replace (/[\t ]/g,"_");
+				ll+="<p class='pindent'><a class='secindent' href='javascript:insBl(\" %"+title+"%"+npage+" \");'>"+title+"</a></p>"
 			}	
 			$("#pglist").html(ll);
 			var rg = $(document.documentElement).width()- $("#pglist").width() -20;
 			$("#pglist").css("left",rg);
-			$("#pglist").css("top","6px");
+			$("#pglist").css("top","16px");
 			$("#pglist").show();
 		});
 	}	
@@ -401,6 +493,14 @@ function aqldate(){
 
 function hlpNamePage (name) { // transform string in page name - normalise or escape accented chars ?
 	return z(name).trim().toLowerCase().replace(/[\t ]+/g ,'_');
+}
+
+function hlpDefAnchor (a) { // for anchors special chars are replaced by a dot followed by hex code, like wikimedia
+    a= a.replace (/\s+/g,'_').toLowerCase(); // space replaced by underscores
+    a= a.replace (/[^\w-]/g, function (match) { //replace special char by'.'+hex code. DOTS and COLON ARE ESCAPED 
+		return ('.' + match.charCodeAt(0).toString(16)); //code char -> .Hex 
+	});
+	return a; 
 }
 
 function insertStr (source, index, string) {// insertion of a string within another - index CAN BE undef

@@ -7,7 +7,7 @@
 <link rel="stylesheet" type="text/css" href="markitup/skins/style.css">
 <!--  markItUp! toolbar skin -->
 <link rel="stylesheet" type="text/css" href="markitup/sets/style.css">
-<script type="text/javascript" src="../js/jquery-2.2.1.min.js"></script>
+<script type="text/javascript" src="../js/jquery-3.1.0.min.js"></script>
 <!-- markItUp! -->
 <script type="text/javascript" src="markitup/jquery.markitup.js"></script>
 <!-- markItUp! toolbar settings -->
@@ -23,7 +23,7 @@ else // use what is defined in .htaccess
 	$author = isset($_SERVER['REMOTE_USER'])?$_SERVER['REMOTE_USER']:"unknown";
 ?>
 <!-- HTML form -->
-<form name = "myform" method="post">
+<form id="xform" name = "myform" method="post">
 File name:<input id="fileinp" type="text" name="flname" value="">
 <input type="button" id="btnload" value="Load" onclick="loadPage(event)">
 &nbsp; Go to page:<input type="text" name="gopage"><input id="gpg" type="submit" name="gpg" value="GO">
@@ -34,12 +34,12 @@ File name:<input id="fileinp" type="text" name="flname" value="">
 Revision: <input id="revision" type="text" name="revision">
 <!-- <input id="svp" type="submit" name="submit" value="Save page"/> -->
 <input type="button" id="svp" value="Save page" onclick="savePage(event)">
-<input type="reset" value="Reset"/>
+<input type="button" value="Reset" onclick="resetPage()"/>
 <div id="msgresult" style="display:inline"></div>
 <input type="hidden" name="sha1" value=""/>
 <input type="hidden" name="forcesave" value="no save"/> <!--modified by JS--> 
 </form>
-<div id="pgsuggest" class="pgx"></div> 
+<div id="pgsuggest" class="pgs"></div> 
 <div id="pglist" class="pgx"></div> 
 <div id="imglist" class="pgx"></div> 
 <div id="imgtip" class="imgx"></div> 

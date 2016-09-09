@@ -22,6 +22,8 @@ if (isset($_POST['flname'])) {
 	$pgbak = "hist/".$pfile.".bak";
 }
 
+$rev = isset($_POST['revision']) ? $_POST['revision'] :"";	// [3]
+
 $res = "res:File ".$pagefile." not saved"; 
 
 if ($pfile && isset($_POST['texta'])) { // save the text contents
@@ -42,6 +44,7 @@ if ($pfile && isset($_POST['texta'])) { // save the text contents
 					if ($sav) {
 						copy ($pagefile, $pgbak);
 						$res = "res:OK\nsha1:".$sha1;
+						recChanges();
 					}
 				}
 				else {
@@ -62,16 +65,23 @@ if ($pfile && isset($_POST['texta'])) { // save the text contents
 }
 
 function storeDiff ($newtext, $oldtext) {
-	global $author, $pfile;
+	global $author, $pfile, $rev; // $author defined in aql.php
 	$filediff = "hist/".$pfile.".dif"; 
 	$opcodes = FineDiff::getDiffOpcodes($newtext, $oldtext);	
 	$delta = strlen($newtext)-strlen($oldtext); // [5]
-	$rev = isset($_POST['revision']) ? $_POST['revision'] :"";	// [3]
 	$headiff = strlen($opcodes).",".$author.",".date("j M Y-G:i").",".$rev.",".strlen($newtext).",".$delta.",".$_SERVER['REMOTE_ADDR']."\n";
 	$fp = fopen($filediff, "a");
 	fwrite ($fp,$headiff,strlen($headiff));  
 	fwrite ($fp,$opcodes,strlen($opcodes)); // length fixed to stop magic quotes
 }
+
+function recChanges () {
+	global $author, $pfile, $rev;
+	$change = date("j M Y-G:i").";".$author.":".$pfile.$rev."\n";
+	$filech = "hist/changes.txt"; 
+	$fp = fopen($filech, "a");
+	fwrite ($fp,$change);  
+}	
 
 function buildlist() {
 	global $fldir;

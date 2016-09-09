@@ -2,7 +2,7 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <link href="edit.css" rel="stylesheet"> 
-<script type="text/javascript" src="../js/jquery-2.2.1.min.js"></script>
+<script type="text/javascript" src="../js/jquery-3.1.0.min.js"></script>
 <title>Aquilegia page diff</title> <!--page derived from demo of finediff by Raymond Hill.  MIT license-->
 </head>
 <body>
