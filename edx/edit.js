@@ -133,8 +133,7 @@ function selPage (){
 
 function dispPage(page) {
 	var loc = window.location.href;
-	loc = loc.substring(0, loc.lastIndexOf("/"));
-	loc = loc.substring(0, loc.lastIndexOf("/")+1);
+	loc = loc.substring(0, loc.lastIndexOf("edx/"));
 	var ad = loc+"#hlp/"+page;
 	window.open(ad, "_blank");
 }
@@ -154,9 +153,10 @@ function loadPage(e) {
 			}
 			posPara += linelg+1;
 		}
-		return [linelg, posPara];
+		if (j==pageTab.length) // not found paragraph
+			posPara=0;
+		return [linelg, posPara]; // length, position
 	}
-	//var $form = $(e.target).parent(); // any use ?
 	var $form = $("#xform"); // Jquery ref (to use Serialize function)
 	var store= document.myform.texta.value;
 	document.myform.texta.value=""; // to not send the text for loading
@@ -177,15 +177,16 @@ function loadPage(e) {
 					var i = pageNameNor.indexOf(xpage);
 					if (xpara) {
 						var t = findPara (document.myform.texta.value.substring (pagePos[xpage], pagePosEnd[xpage]));
-						goPos(pagePos[xpage]+t[1], t[0], 120);
+						goPos(pagePos[xpage]+t[1], t[0], 250);
 					}
 					else
-						goPos(pagePos[xpage], xpage.length, 120);
+						goPos(pagePos[xpage], xpage.length, 250);
 					xpage = "";
 				}
 				else { // independant page
 					var t = findPara (document.myform.texta.value);
-					goPos(t[1], t[0], 120);
+					if (t[0]) // there is an anchor
+						goPos(t[1], t[0], 250);
 				}
 			}
 			else {
